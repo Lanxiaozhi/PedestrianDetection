@@ -3,6 +3,7 @@ from utils.augmentations import SSDAugmentation
 from layers.modules import MultiBoxLoss
 from model import build_ssd
 from config import train_params
+from tensorboardX import SummaryWriter
 import os
 import time
 import torch
@@ -50,6 +51,9 @@ parser.add_argument('--save_folder', default='weights/',
                     help='Directory for saving checkpoint models')
 """
 args = parser.parse_args()
+if not os.path.exists("./train_log"):
+    os.mkdir("./train_log")
+writer = SummaryWriter(log_dir='./train_log')
 
 if torch.cuda.is_available():
     if train_params['cuda']:
@@ -163,6 +167,10 @@ def train():
         t1 = time.time()
         loc_loss += loss_l.item()
         conf_loss += loss_c.item()
+
+        writer.add_scalar('Loss', loss, iteration)
+        writer.add_scalar('Loss_c', loss_c, iteration)
+        writer.add_scalar('Loss_l', loss_l, iteration)
 
         if iteration % 1 == 0:
             print('timer: %.4f sec.' % (t1 - t0))
