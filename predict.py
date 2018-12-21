@@ -15,12 +15,15 @@ import cv2
 from model import build_ssd
 from config import pedestrian
 
+if torch.cuda.is_available():
+    torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 def make_predict(model_path, data_path, res_file):
     net = build_ssd('test', 300, pedestrian['num_classes'])
     net.load_weights(model_path)
+    net = net.cuda()
     images = os.listdir(data_path)
-    with open(res_file) as f:
+    with open(res_file, "w") as f:
         for image in images:
             img = cv2.imread(os.path.join(data_path, image), cv2.IMREAD_COLOR)
 
@@ -46,7 +49,7 @@ def make_predict(model_path, data_path, res_file):
                     pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
                     coords = (pt[0], pt[1]), pt[2] - pt[0] + 1, pt[3] - pt[1] + 1
                     j += 1
-                    f.write("{} {} {} {} {} {}".format(image, score, pt[0], pt[1], pt[2], pt[3]))
+                    f.write("{} {} {} {} {} {}\n".format(image, score, pt[0], pt[1], pt[2], pt[3]))
 
 
 if __name__ == "__main__":
